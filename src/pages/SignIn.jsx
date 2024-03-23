@@ -1,17 +1,21 @@
-import { useState } from 'react'
+import { useState} from 'react'
 import {Link, useNavigate} from 'react-router-dom'
 // import SignIn from './SignIn'
+import { useDispatch, useSelector } from 'react-redux'
+import { signInFailure, signInStart, signInSuccess } from '../redux/user/userSlice'
 
 export default function SignIn() {
 
   const [formData, setFormData] = useState({})
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  // const [error, setError] = useState(null)
+  // const [loading, setLoading] = useState(false)
+  const {loading, error} = useSelector((state) => state.user)
   const navigate = useNavigate()
+  const dispatch = useDispatch();
 
   const handleChange =(e) =>{
     setFormData({
-      // below 11 linne formdata is used to keep track of all the attribute values like id password etc.,
+      // below 11 linne formdata is used to keep track of all  the attribute values like id password etc.,
       // otherwise as we move on to write next data it will loose track of previous one
       ...formData,
       [e.target.id] : e.target.value
@@ -23,8 +27,9 @@ export default function SignIn() {
     e.preventDefault()
 
     try {
-      setLoading(true)
-    
+      // setLoading(true)
+      dispatch(signInStart())
+ 
     // const res = await fetch('/api/auth/signup', formData)
     // we have to change formData to string as it is not secure in this format
     
@@ -39,17 +44,20 @@ export default function SignIn() {
     // console.log(data)
 
     if(data.success === false){
-      setError(data.message),
-      setLoading(false)
+      dispatch(signInFailure(data.message))
+      // setError(data.message),
+      // setLoading(false)
       return;
     }
-    setLoading(false)
-    setError(null)
+    dispatch(signInSuccess(data))
+    // setLoading(false)
+    // setError(null)
     navigate('/')
     } 
     catch (error) {
-     setLoading(false)
-     setError(error.message) 
+      dispatch(signInFailure(error.message))
+    //  setLoading(false)
+    //  setError(error.message) 
     }
   }
   

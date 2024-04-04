@@ -2,7 +2,7 @@ import { useSelector } from "react-redux"
 import {useState, useRef, useEffect } from "react"
 import {getStorage, uploadBytesResumable, ref, getDownloadURL} from "firebase/storage"
 import {app} from '../firebase.js'
-import { updateUserStart, updateUserSuccess, updateUserFailure } from "../redux/user/userSlice.js"
+import { updateUserStart, updateUserSuccess, updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSuccess } from "../redux/user/userSlice.js"
 import { useDispatch } from "react-redux"
 
 export default function Profile() {
@@ -32,7 +32,6 @@ export default function Profile() {
           handleFileUpload(file);
         }
       }, [file])
-
 
       const handleFileUpload =(file) =>{
         const storage = getStorage(app)
@@ -86,6 +85,29 @@ export default function Profile() {
           dispatch(updateUserFailure(error.message))
         }
       }
+
+      const handleDeleteUser=async() =>{
+        try {
+          dispatch(deleteUserStart())
+          const res = await fetch(`/api/user/delete/${currentUser._id}`,
+          {
+            method: 'DELETE'
+          }
+          )
+
+          const data = await res.json()
+
+          if(data.sucess === false){
+            dispatch(deleteUserFailure(data.message))
+            return
+          }
+
+          dispatch(deleteUserSuccess(data))
+        } 
+        catch (error) {
+          dispatch(deleteUserFailure(error.message))
+        }
+      }
   
   return (
     <div className="p-3 max-w-lg mx-auto">
@@ -94,7 +116,6 @@ export default function Profile() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input onChange={(e) => setFile(e.target.files[0])} type="file" ref={fileRef} hidden accept='image/*'/>
     
-
         <img onClick={() => fileRef.current.click()} className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2" src={formData?.avatar || currentUser.avatar} alt="profile" />
 
         <p className="text-sm self-center">
@@ -128,7 +149,7 @@ export default function Profile() {
       </form>
 
       <div className="flex mt-5 justify-between">
-        <span className="text-red-700 cursor-pointer hover:text-red-500">Delete Account</span>
+        <span className="text-red-700 cursor-pointer hover:text-red-500" onClick={handleDeleteUser}>Delete Account</span>
         <span className="text-red-700 cursor-pointer hover:text-red-500">Sign Out</span>
       </div>
 

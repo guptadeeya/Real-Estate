@@ -14,6 +14,8 @@ export default function Profile() {
   const [fileUploadError, setFileUploadError] = useState(false)
   const [formData, setFormData] = useState({})
   const [updateSuccess, setUpdateSuccess] = useState(false)
+  const [showListingError, setShowListingError] = useState(false)
+  const [userListing, setUserListing] = useState([])
 
   const dispatch = useDispatch()
 
@@ -125,6 +127,24 @@ export default function Profile() {
           dispatch(signOutUserFailure(data.message))
         }
       }
+
+      const handleShowListings = async() =>{
+        try{
+          setShowListingError(false)
+
+          const res = await fetch(`/api/user/listing/${currentUser._id}`)
+          const data = await res.json()
+
+            if(data.success === false){
+              setShowListingError(true)
+              return
+            }
+            setUserListing(data)
+        }
+        catch(error){
+          setShowListingError(true)
+        }
+      }
   
   return (
     <div className="p-3 max-w-lg mx-auto">
@@ -176,7 +196,37 @@ export default function Profile() {
 
       <p className="text-red-700 mt-5">{error ? error: ""}</p>
 
-      <p className="text-green-700 mt-5">{updateSuccess ? 'User is updated successfully': ''}</p>
+      <p className="text-green-700 mt-5">
+        {updateSuccess ? 'User is updated successfully': ''}
+        </p>
+
+        <button className="text-green-700 w-full" onClick={handleShowListings}>Show Listings</button>
+
+        <p className="text-red-700 mt-5">{showListingError ? "Error showing listing" : ""}</p>
+
+        {userListing && userListing.length > 0 && 
+
+        <div className="flex flexx gap-4">
+          <h1 className="text-center mt-7 text-2xl font-semibold">Your listings</h1>
+        {userListing.map((listing) =>(
+          // items-center align the items vertically
+        <div key={listing._id} className="border rounded-lg p-3 flex justify-between items-center gap-4">
+          <Link to={`/listing/${listing._id}`}>
+            <img src={listing.imageUrls[0]} alt="listing cover" className="h-16 w-16 object-contain"/>
+          </Link>
+
+          <Link className="text-slate-700 font-semibold hover:underline truncate" to={`/listing/${listing._id}`}>
+           <p>{listing.name}</p>
+          </Link>
+
+          <div className="flex flex-col items-center">
+            <button className="text-red-700">Delete</button>
+            <button className="text-green-700">Edit</button>
+          </div>
+        </div>
+        ))}
+        </div>
+        }
     </div>
   )
 }
